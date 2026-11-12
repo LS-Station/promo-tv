@@ -21,8 +21,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg wget
-          # সঠিক এবং ব্র্যাকেট মুক্ত ইউনিকোড বাংলা ফন্ট লিংক ব্যবহার করা হলো
-          wget -O font.ttf "https://github.com/google/fonts/raw/main/apache/notosansbengali/NotoSansBengali-Regular.ttf"
+          # একদম স্টেবল সিডিএন থেকে ইউনিকোড ফন্ট ডাউনলোড নিশ্চিত করা হলো
+          wget -O font.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansbengali/NotoSansBengali-Regular.ttf"
 
       - name: Generate Animated M3U8 Stream
         run: |
@@ -39,5 +39,5 @@ jobs:
           git config user.name "Auto Bot"
           git config user.email "bot@github.com"
           git add stream/ font.ttf
-          git commit -m "Fix font download and update stream" || exit 0
+          git commit -m "Update working font and animated stream" || exit 0
           git push
