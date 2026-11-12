@@ -1,10 +1,11 @@
-name: Generate Promo Stream
+name: Generate Modern Promo Stream
 
 on:
   push:
     paths:
       - 'messages.txt'
       - '.github/workflows/build-stream.yml'
+      - 'font.ttf'
   workflow_dispatch:
 
 permissions:
@@ -17,25 +18,25 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install FFmpeg & System Fonts
+      - name: Install FFmpeg
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg fonts-liberation
+          sudo apt-get install -y ffmpeg
 
-      - name: Generate Animated M3U8 Stream
+      - name: Generate Pro Cartoon Chalk M3U8 Stream
         run: |
           mkdir -p stream
-          # লিনাক্সের বিল্ট-ইন স্ট্যান্ডার্ড ফন্ট ব্যবহার করা হলো, কোনো ডাউনলোডের ঝামেলা নেই!
-          ffmpeg -f lavfi -i color=c=black:s=1280x720:r=30 -t 20 \
-          -vf "drawtext=fontfile=/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf:textfile=messages.txt:fontcolor=yellow:fontsize=56:x=(w-text_w)/2:y=h-(t*50):shadowcolor=black:shadowx=3:shadowy=3" \
+          # ব্ল্যাকবোর্ড স্টাইল ডার্ক ব্যাকগ্রাউন্ডে চক স্টাইল টাইপিং এবং প্রিমিয়াম প্রমো এফেক্ট
+          ffmpeg -f lavfi -i color=c=0x111111:s=1280x720:r=30 -t 25 \
+          -vf "drawtext=fontfile=font.ttf:textfile=messages.txt:fontcolor=white:fontsize=48:x=(w-text_w)/2:y=(h-text_h)/2:box=1:boxcolor=black@0.5:boxborderw=20:shadowcolor=0x444444:shadowx=2:shadowy=2" \
           -c:v libx264 -preset veryfast -g 60 -sc_threshold 0 \
           -hls_time 5 -hls_list_size 0 -hls_segment_filename "stream/seg_%03d.ts" \
           stream/stream.m3u8
 
       - name: Push to GitHub
         run: |
-          git config user.name "Auto Bot"
+          git config user.name "Promo Bot"
           git config user.email "bot@github.com"
           git add stream/
-          git commit -m "Generate stream with local system font" || exit 0
+          git commit -m "Upgrade to modern chalkboard style stream" || exit 0
           git push
