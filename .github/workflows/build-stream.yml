@@ -23,12 +23,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Generate Pro Cartoon Chalk M3U8 Stream
+      - name: Generate Perfect Unicode Bengali Stream
         run: |
           mkdir -p stream
-          # ব্ল্যাকবোর্ড স্টাইল ডার্ক ব্যাকগ্রাউন্ডে চক স্টাইল টাইপিং এবং প্রিমিয়াম প্রমো এফেক্ট
+          
+          # messages.txt থেকে একটি নিখুঁত সাবটাইটেল (SRT) ফাইল তৈরি করা হচ্ছে যা বাংলা যুক্তাক্ষর ভাঙতে দেবে না
+          echo "1" > promo.srt
+          echo "00:00:00,000 --> 00:00:25,000" >> promo.srt
+          cat messages.txt >> promo.srt
+
+          # সাবটাইটেল ফিল্টার (subtitles) ব্যবহার করে নিখুঁত বাংলা রেন্ডারিং
           ffmpeg -f lavfi -i color=c=0x111111:s=1280x720:r=30 -t 25 \
-          -vf "drawtext=fontfile=font.ttf:textfile=messages.txt:fontcolor=white:fontsize=48:x=(w-text_w)/2:y=(h-text_h)/2:box=1:boxcolor=black@0.5:boxborderw=20:shadowcolor=0x444444:shadowx=2:shadowy=2" \
+          -vf "subtitles=promo.srt:force_style='FontName=Noto Sans Bengali,FontSize=28,PrimaryColour=&H00FFFF&,OutlineColour=&H000000&,BorderStyle=3,Outline=2,Shadow=2,Alignment=2'" \
           -c:v libx264 -preset veryfast -g 60 -sc_threshold 0 \
           -hls_time 5 -hls_list_size 0 -hls_segment_filename "stream/seg_%03d.ts" \
           stream/stream.m3u8
@@ -38,5 +44,5 @@ jobs:
           git config user.name "Promo Bot"
           git config user.email "bot@github.com"
           git add stream/
-          git commit -m "Upgrade to modern chalkboard style stream" || exit 0
+          git commit -m "Fix Bengali conjunct rendering using SRT subtitles" || exit 0
           git push
