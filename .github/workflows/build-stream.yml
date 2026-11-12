@@ -1,4 +1,4 @@
-name: Build Promo IPTV Stream
+name: Build Pro IPTV Stream
 
 on:
   push:
@@ -18,20 +18,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg fonts-dejavu-core
 
-      - name: Generate Promo Stream (HLS)
+      - name: Generate Professional HLS Stream
         run: |
           mkdir -p stream
-          ffmpeg -f lavfi -i color=c=#0f172a:s=1280x720:r=30:d=30 \
-          -vf "drawbox=x=0:y=220:w=1280:h=280:color=black@0.6:t=fill, \
-               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='Welcome to our IPTV channel!':fontcolor=#facc15:fontsize=50:x=(w-text_w)/2:y=275:shadowcolor=black:shadowx=3:shadowy=3, \
-               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='Stay with us for regular updates.':fontcolor=white:fontsize=34:x=(w-text_w)/2:y=375:shadowcolor=black:shadowx=2:shadowy=2" \
-          -c:v libx264 -preset ultrafast -pix_fmt yuv420p \
-          -hls_time 5 -hls_list_size 0 -f hls stream/stream.m3u8
+          # promo.mp4 হলো আপনার আপলোড করা ভিডিও, আর font.ttf হলো আপনার ফন্ট ফাইল
+          ffmpeg -stream_loop -1 -i promo.mp4 -i font.ttf \
+          -filter_complex \
+          "[0:v]scale=1280:720,setsar=1[v0]; \
+           [v0]drawbox=x=0:y=220:w=1280:h=280:color=black@0.6:t=fill[v1]; \
+           [v1]drawtext=fontfile='font.ttf':text='Welcome to our IPTV channel!':fontcolor=#facc15:fontsize=46:x=(w-text_w)/2:y=270:shadowcolor=black:shadowx=3:shadowy=3[v2]; \
+           [v2]drawtext=fontfile='font.ttf':text='Stay with us for regular updates.':fontcolor=white:fontsize=32:x=(w-text_w)/2:y=360:shadowcolor=black:shadowx=2:shadowy=2[v]" \
+          -map "[v]" -c:v libx264 -preset ultrafast -pix_fmt yuv420p \
+          -hls_time 4 -hls_list_size 5 -hls_flags delete_segments \
+          stream/stream.m3u8
 
       - name: Commit and Push Stream
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add stream/
-          git commit -m "Update clean promo stream" || echo "No changes to commit"
+          git commit -m "Update professional video promo stream" || echo "No changes to commit"
           git push
