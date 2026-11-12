@@ -1,0 +1,39 @@
+name: Generate Promo Stream
+
+on:
+  push:
+    paths:
+      - 'messages.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install FFmpeg & Fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-noto-beng
+
+      - name: Generate M3U8 Stream
+        run: |
+          mkdir -p stream
+          ffmpeg -f lavfi -i color=c=black:s=1280x720:r=30 -t 15 \
+          -vf "drawtext=fontfile=/usr/share/fonts/truetype/noto/NotoSansBengali-Regular.ttf:textfile=messages.txt:fontcolor=white:fontsize=48:x=(w-text_w)/2:y=(h-text_h)/2" \
+          -c:v libx264 -preset veryfast -g 60 -sc_threshold 0 \
+          -hls_time 5 -hls_list_size 0 -hls_segment_filename "stream/seg_%03d.ts" \
+          stream/stream.m3u8
+
+      - name: Push to GitHub
+        run: |
+          git config user.name "Auto Bot"
+          git config user.email "bot@github.com"
+          git add stream/
+          git commit -m "Auto update stream" || exit 0
+          git push
