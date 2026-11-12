@@ -20,14 +20,14 @@ jobs:
       - name: Install FFmpeg & Download Font
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg curl
-          # সরাসরি রিমোট থেকে স্ট্যান্ডার্ড বাংলা ফন্ট ডাউনলোড করে নিচ্ছি যাতে আপনার কোনো ঝামেলা না হয়
-          curl -L -o font.ttf "https://github.com/google/fonts/raw/main/ofl/notosansbengali/NotoSansBengali[wdth,wght].ttf"
+          sudo apt-get install -y ffmpeg wget
+          # সঠিক এবং ব্র্যাকেট মুক্ত ইউনিকোড বাংলা ফন্ট লিংক ব্যবহার করা হলো
+          wget -O font.ttf "https://github.com/google/fonts/raw/main/apache/notosansbengali/NotoSansBengali-Regular.ttf"
 
       - name: Generate Animated M3U8 Stream
         run: |
           mkdir -p stream
-          # টেক্সট নিচ থেকে ওপরের দিকে স্মুথলি মুভ করার অ্যানিমেশন এবং হলুদ-সাদা কালার
+          # টেক্সট নিচ থেকে ওপরের দিকে স্মুথলি মুভ করার অ্যানিমেশন এবং হলুদ কালার
           ffmpeg -f lavfi -i color=c=black:s=1280x720:r=30 -t 20 \
           -vf "drawtext=fontfile=font.ttf:textfile=messages.txt:fontcolor=yellow:fontsize=52:x=(w-text_w)/2:y=h-(t*50):shadowcolor=black:shadowx=3:shadowy=3" \
           -c:v libx264 -preset veryfast -g 60 -sc_threshold 0 \
@@ -39,5 +39,5 @@ jobs:
           git config user.name "Auto Bot"
           git config user.email "bot@github.com"
           git add stream/ font.ttf
-          git commit -m "Auto update animated stream with auto-font" || exit 0
+          git commit -m "Fix font download and update stream" || exit 0
           git push
