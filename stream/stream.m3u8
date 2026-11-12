@@ -10,4 +10,6 @@ seg_001.ts
 seg_002.ts
 #EXTINF:4.000000,
 seg_003.ts
+#EXTINF:5.000000,
+seg_004.ts
 #EXT-X-ENDLIST
