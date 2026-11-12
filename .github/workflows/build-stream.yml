@@ -1,4 +1,4 @@
-name: Build Pro IPTV Promo Channel
+name: Build Skym3u Promo Stream
 
 on:
   push:
@@ -23,24 +23,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg fonts-dejavu-core
 
-      - name: Generate TV-Style Animated Promo Stream
+      - name: Generate Skym3u Promo Stream
         run: |
           mkdir -p stream
           ffmpeg -f lavfi -i "gradients=s=1280x720:r=30:d=30:c0=#050811:c1=#0f172a:c2=#1e1b4b:c3=#0c4a6e:speed=0.06" \
-          -vf "drawbox=x=120:y=130:w=1040:h=410:color=black@0.75:t=fill, \
-               drawbox=x=120:y=130:w=1040:h=5:color=#38bdf8:t=fill, \
-               drawbox=x=120:y=535:w=1040:h=5:color=#facc15:t=fill, \
-               drawbox=x=50:y=40:w=175:h=42:color=#dc2626:t=fill, \
-               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='● LIVE PROMO':fontcolor=white:fontsize=20:x=68:y=52, \
-               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='SKY M3U IPTV NETWORK':fontcolor=#38bdf8:fontsize=26:x=(w-text_w)/2:y=170, \
-               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='Free M3U Playlist Download':fontcolor=#facc15:fontsize=46:x=(w-text_w)/2:y=235:shadowcolor=black:shadowx=3:shadowy=3, \
-               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='VLC & TiviMate IPTV Setup Tutorials':fontcolor=white:fontsize=34:x=(w-text_w)/2:y=325:shadowcolor=black:shadowx=2:shadowy=2, \
-               drawbox=x=340:y=410:w=600:h=65:color=#1e293b@0.9:t=fill, \
-               drawbox=x=340:y=410:w=600:h=2:color=#facc15:t=fill, \
-               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='Visit: www.skym3u.dev':fontcolor=#4ade80:fontsize=32:x=(w-text_w)/2:y=428, \
-               drawbox=x=0:y=655:w=1280:h=65:color=#020617@0.95:t=fill, \
-               drawbox=x=0:y=655:w=1280:h=3:color=#38bdf8:t=fill, \
-               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='★ Download Latest Free M3U Playlists  |  Step-by-Step VLC & TiviMate Setup Guides  |  Fast & Reliable Streaming  |  Visit www.skym3u.dev ★':fontcolor=#e2e8f0:fontsize=24:x=w-mod(t*160\,w+tw):y=676" \
+          -vf "drawbox=x=120:y=140:w=1040:h=380:color=black@0.75:t=fill, \
+               drawbox=x=120:y=140:w=1040:h=4:color=#38bdf8:t=fill, \
+               drawbox=x=120:y=516:w=1040:h=4:color=#facc15:t=fill, \
+               drawbox=x=50:y=40:w=140:h=40:color=#dc2626:t=fill, \
+               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='LIVE PROMO':fontcolor=white:fontsize=18:x=65:y=51, \
+               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='SKY M3U':fontcolor=#38bdf8:fontsize=32:x=(w-text_w)/2:y=185, \
+               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='Free M3U Playlist & IPTV Setup':fontcolor=#facc15:fontsize=42:x=(w-text_w)/2:y=245:shadowcolor=black:shadowx=3:shadowy=3, \
+               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='VLC & TiviMate Tutorials available now':fontcolor=white:fontsize=28:x=(w-text_w)/2:y=330:shadowcolor=black:shadowx=2:shadowy=2, \
+               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='Visit: www.skym3u.dev':fontcolor=#4ade80:fontsize=30:x=(w-text_w)/2:y=415, \
+               drawbox=x=0:y=655:w=1280:h=60:color=#020617@0.95:t=fill, \
+               drawbox=x=0:y=655:w=1280:h=2:color=#38bdf8:t=fill, \
+               drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='★ Welcome to Skym3u  |  Free M3U Playlists  |  VLC & TiviMate Guides  |  Visit www.skym3u.dev ★':fontcolor=#e2e8f0:fontsize=22:x=w-mod(t*140\,w+tw):y=674" \
           -c:v libx264 -preset ultrafast -pix_fmt yuv420p \
           -hls_time 5 -hls_list_size 0 -f hls stream/stream.m3u8
 
@@ -49,5 +47,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add stream/
-          git commit -m "Build TV-style animated promo stream" || echo "No changes to commit"
+          git commit -m "Update Skym3u promo stream" || echo "No changes to commit"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
