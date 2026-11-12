@@ -1,4 +1,4 @@
-name: Generate Modern Promo Stream
+name: Generate Pro Promo Stream
 
 on:
   push:
@@ -18,23 +18,23 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install FFmpeg
+      - name: Install FFmpeg & Fontconfig
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y ffmpeg fontconfig
 
-      - name: Generate Perfect Unicode Bengali Stream
+      - name: Build Professional M3U8 Stream
         run: |
           mkdir -p stream
           
-          # messages.txt থেকে একটি নিখুঁত সাবটাইটেল (SRT) ফাইল তৈরি করা হচ্ছে যা বাংলা যুক্তাক্ষর ভাঙতে দেবে না
+          # ইউনিকোড সাবটাইটেল ফাইল তৈরি (বাংলা যুক্তক্ষর ও ফন্ট ঠিক রাখতে)
           echo "1" > promo.srt
-          echo "00:00:00,000 --> 00:00:25,000" >> promo.srt
+          echo "00:00:00,000 --> 00:00:30,000" >> promo.srt
           cat messages.txt >> promo.srt
 
-          # সাবটাইটেল ফিল্টার (subtitles) ব্যবহার করে নিখুঁত বাংলা রেন্ডারিং
-          ffmpeg -f lavfi -i color=c=0x111111:s=1280x720:r=30 -t 25 \
-          -vf "subtitles=promo.srt:force_style='FontName=Noto Sans Bengali,FontSize=28,PrimaryColour=&H00FFFF&,OutlineColour=&H000000&,BorderStyle=3,Outline=2,Shadow=2,Alignment=2'" \
+          # ফন্ট ডিরেক্টরি সেট করে নিখুঁত সাবটাইটেল রেন্ডারিং
+          ffmpeg -f lavfi -i color=c=0x0a0a0a:s=1280x720:r=30 -t 30 \
+          -vf "subtitles=promo.srt:force_style='Fontfile=font.ttf,FontSize=32,PrimaryColour=&H00FFFF&,OutlineColour=&H000000&,BorderStyle=3,Outline=2,Shadow=2,Alignment=2'" \
           -c:v libx264 -preset veryfast -g 60 -sc_threshold 0 \
           -hls_time 5 -hls_list_size 0 -hls_segment_filename "stream/seg_%03d.ts" \
           stream/stream.m3u8
@@ -44,5 +44,5 @@ jobs:
           git config user.name "Promo Bot"
           git config user.email "bot@github.com"
           git add stream/
-          git commit -m "Fix Bengali conjunct rendering using SRT subtitles" || exit 0
+          git commit -m "Fix font rendering and build professional stream" || exit 0
           git push
