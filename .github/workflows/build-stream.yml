@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: skymu-promo-${{ github.ref }}
+  group: skym3u-promo-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -85,7 +85,7 @@ jobs:
           print(f"Created original 60-second soundtrack: {output}")
           PYCODE
 
-      - name: Render clean watermark HLS stream from video_1.mp4
+      - name: Render channel logo HLS stream from video_1.mp4
         shell: bash
         env:
           INCLUDE_AUDIO: ${{ github.event_name != 'workflow_dispatch' || inputs.include_audio }}
@@ -101,10 +101,12 @@ jobs:
           test -f "$FONT_BOLD"
           test -f "$FONT_REG"
 
-          # Subtle, clean watermark overlay without heavy boxes or cluttered text
+          # Crisp, high-visibility TV channel bug on the top-right corner
           filters="scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,setsar=1,"
-          filters+="drawtext=fontfile=${FONT_BOLD}:text='SKYM3U':fontcolor=white@0.22:fontsize=46:x=(w-text_w)/2:y=(h-text_h)/2-18,"
-          filters+="drawtext=fontfile=${FONT_REG}:text='www.skym3u.dev':fontcolor=white@0.18:fontsize=22:x=(w-text_w)/2:y=(h-text_h)/2+28"
+          filters+="drawbox=x=992:y=32:w=252:h=76:color=black@0.65:t=fill,"
+          filters+="drawbox=x=992:y=32:w=5:h=76:color=#38bdf8@0.95:t=fill,"
+          filters+="drawtext=fontfile=${FONT_BOLD}:text='SKYM3U':fontcolor=white:fontsize=28:x=1012:y=42:shadowcolor=black@0.85:shadowx=2:shadowy=2,"
+          filters+="drawtext=fontfile=${FONT_REG}:text='www.skym3u.dev':fontcolor=#e2e8f0:fontsize=16:x=1012:y=78:shadowcolor=black@0.85:shadowx=1:shadowy=1"
 
           if [[ "${INCLUDE_AUDIO:-true}" == "true" ]]; then
             ffmpeg -hide_banner -loglevel error -y \
@@ -162,5 +164,5 @@ jobs:
             exit 0
           fi
 
-          git commit -m "Rebuild clean watermark HLS stream from video_1.mp4"
+          git commit -m "Build Skym3u top-right channel logo HLS stream"
           git push origin "HEAD:${GITHUB_REF_NAME}"
