@@ -1,4 +1,4 @@
-name: Build Skym3u Ultimate Promo Stream
+name: Build Skym3u Clean Watermark Stream
 
 on:
   push:
@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: skym3u-promo-${{ github.ref }}
+  group: skymu-promo-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -33,39 +33,10 @@ jobs:
           sudo apt-get install -y ffmpeg fonts-dejavu-core
           ffmpeg -version | head -n 1
 
-      - name: Render clean watermark promo from stadium video
-        shell: bash
+      - name: Create original Skym3u background soundtrack
         run: |
           set -euo pipefail
-
-          mkdir -p stream build
-          rm -f stream/*.ts stream/*.m3u8 build/*.mp4 build/*.txt
-
-          BG_VIDEO="video_1.mp4"
-          test -f "$BG_VIDEO"
-
-          FONT_BOLD="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-          FONT_REG="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-          test -f "$FONT_BOLD"
-          test -f "$FONT_REG"
-
-          # Clean, minimal watermark-style overlays over the stadium footage
-          filters="scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,setsar=1,"
-          filters+="drawtext=fontfile=${FONT_BOLD}:text='SKYM3U':fontcolor=white@0.40:fontsize=54:x=(w-text_w)/2:y=(h-text_h)/2-26:shadowcolor=black@0.25:shadowx=2:shadowy=2,"
-          filters+="drawtext=fontfile=${FONT_REG}:text='www.skym3u.dev':fontcolor=white@0.35:fontsize=26:x=(w-text_w)/2:y=(h-text_h)/2+34:shadowcolor=black@0.25:shadowx=1:shadowy=1,"
-          filters+="drawtext=fontfile=${FONT_BOLD}:text='SKYM3U':fontcolor=white@0.28:fontsize=20:x=w-tw-36:y=h-th-28"
-
-          ffmpeg -hide_banner -loglevel error -y \
-            -stream_loop -1 -i "$BG_VIDEO" \
-            -vf "$filters" \
-            -t 60 -r 30 \
-            -c:v libx264 -preset veryfast -crf 22 \
-            -pix_fmt yuv420p -an -movflags +faststart \
-            build/promo-silent.mp4
-
-- name: Create original Skym3u background soundtrack
-        run: |
-          set -euo pipefail
+          mkdir -p build stream
           python3 - <<'PYCODE'
           import math, wave, struct
 
@@ -114,55 +85,70 @@ jobs:
           print(f"Created original 60-second soundtrack: {output}")
           PYCODE
 
-- name: Add built-in background music
+      - name: Render clean watermark HLS stream from video_1.mp4
         shell: bash
         env:
           INCLUDE_AUDIO: ${{ github.event_name != 'workflow_dispatch' || inputs.include_audio }}
         run: |
           set -euo pipefail
 
+          rm -rf stream/*
+          BG_VIDEO="video_1.mp4"
+          test -f "$BG_VIDEO"
+
+          FONT_BOLD="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+          FONT_REG="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+          test -f "$FONT_BOLD"
+          test -f "$FONT_REG"
+
+          # Subtle, clean watermark overlay without heavy boxes or cluttered text
+          filters="scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,setsar=1,"
+          filters+="drawtext=fontfile=${FONT_BOLD}:text='SKYM3U':fontcolor=white@0.22:fontsize=46:x=(w-text_w)/2:y=(h-text_h)/2-18,"
+          filters+="drawtext=fontfile=${FONT_REG}:text='www.skym3u.dev':fontcolor=white@0.18:fontsize=22:x=(w-text_w)/2:y=(h-text_h)/2+28"
+
           if [[ "${INCLUDE_AUDIO:-true}" == "true" ]]; then
             ffmpeg -hide_banner -loglevel error -y \
-              -i build/promo-silent.mp4 \
+              -stream_loop -1 -i "$BG_VIDEO" \
               -i build/skym3u-original-soundtrack.wav \
-              -map 0:v:0 -map 1:a:0 \
-              -t 60 \
-              -c:v copy \
+              -filter_complex "[0:v]${filters}[vout]" \
+              -map "[vout]" -map 1:a:0 \
+              -t 60 -r 30 \
+              -c:v libx264 -preset veryfast -crf 22 \
+              -pix_fmt yuv420p \
+              -g 150 -keyint_min 150 -sc_threshold 0 \
+              -force_key_frames "expr:gte(t,n_forced*5)" \
               -c:a aac -b:a 128k -ar 48000 -ac 2 \
               -shortest \
-              -movflags +faststart \
-              build/promo-final.mp4
-            echo "Original Skym3u background soundtrack enabled."
+              -f hls \
+              -hls_time 5 \
+              -hls_list_size 0 \
+              -hls_playlist_type vod \
+              -hls_flags independent_segments \
+              -hls_segment_filename "stream/segment_%03d.ts" \
+              stream/stream.m3u8
           else
-            cp build/promo-silent.mp4 build/promo-final.mp4
-            echo "Audio disabled by workflow input."
+            ffmpeg -hide_banner -loglevel error -y \
+              -stream_loop -1 -i "$BG_VIDEO" \
+              -vf "$filters" \
+              -t 60 -r 30 \
+              -c:v libx264 -preset veryfast -crf 22 \
+              -pix_fmt yuv420p \
+              -g 150 -keyint_min 150 -sc_threshold 0 \
+              -force_key_frames "expr:gte(t,n_forced*5)" \
+              -an \
+              -f hls \
+              -hls_time 5 \
+              -hls_list_size 0 \
+              -hls_playlist_type vod \
+              -hls_flags independent_segments \
+              -hls_segment_filename "stream/segment_%03d.ts" \
+              stream/stream.m3u8
           fi
 
-- name: Package as HLS
-        run: |
-          set -euo pipefail
-
-          ffmpeg -hide_banner -loglevel error -y \
-            -i build/promo-final.mp4 \
-            -map 0:v:0 -map 0:a? \
-            -c:v libx264 -preset veryfast -crf 22 \
-            -pix_fmt yuv420p -r 30 \
-            -g 150 -keyint_min 150 -sc_threshold 0 \
-            -force_key_frames "expr:gte(t,n_forced*5)" \
-            -c:a aac -b:a 128k -ar 48000 \
-            -f hls \
-            -hls_time 5 \
-            -hls_list_size 0 \
-            -hls_playlist_type vod \
-            -hls_flags independent_segments \
-            -hls_segment_filename "stream/segment_%03d.ts" \
-            stream/stream.m3u8
-
-          echo "HLS output:"
           ls -lh stream/
           test -s stream/stream.m3u8
 
-- name: Commit and push HLS stream
+      - name: Commit and push HLS stream
         shell: bash
         run: |
           set -euo pipefail
@@ -170,11 +156,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add stream/
+          git add -A stream/
           if git diff --cached --quiet; then
             echo "No HLS changes to commit."
             exit 0
           fi
 
-          git commit -m "Build Skym3u clean watermark promo stream"
+          git commit -m "Rebuild clean watermark HLS stream from video_1.mp4"
           git push origin "HEAD:${GITHUB_REF_NAME}"
